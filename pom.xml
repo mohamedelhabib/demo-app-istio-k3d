@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>demo-istio</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>demo-istio</name>
     <description>Demo project for Spring Boot</description>
 
@@ -82,7 +82,9 @@
                         <image>adoptopenjdk/openjdk13:jdk-13.0.1_9-alpine</image>
                     </from>
                     <to>
-                        <image>${project.groupId}/${project.artifactId}:${git.commit.id.abbrev}</image>
+                        <!-- use fixed version and not commit to make demo simple -->
+                        <!-- <image>${project.groupId}/${project.artifactId}:${git.commit.id.abbrev}</image> -->
+                        <image>${project.groupId}/${project.artifactId}:${project.version}</image>
                     </to>
                 </configuration>
             </plugin>
