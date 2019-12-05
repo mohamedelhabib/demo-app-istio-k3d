@@ -1,15 +1,17 @@
-# Kubernetes local environment
+# Kubernetes into local environment
 
-  * [Install k3d](#install-k3d)
-  * [Create cluster](#create-cluster)
-  * [Deploy Application](#deploy-application)
-  * [Istio](#istio)
-    + [Download Istio](#download-istio)
-    + [Create a namespace for istio](#create-a-namespace-for-istio)
-    + [Install istio-init](#install-istio-init)
-    + [Install istio](#install-istio)
-    + [Test with istio demo application](#test-with-istio-demo-application)
-
+- [Kubernetes into local environment](#kubernetes-into-local-environment)
+  - [Install k3d](#install-k3d)
+  - [Create cluster](#create-cluster)
+  - [Deploy Application](#deploy-application)
+  - [Istio](#istio)
+    - [Download Istio](#download-istio)
+    - [Create a namespace for istio](#create-a-namespace-for-istio)
+    - [Install istio-init](#install-istio-init)
+    - [Install istio](#install-istio)
+    - [Test with istio demo application](#test-with-istio-demo-application)
+    - [Update `demo-app`](#update-demo-app)
+    - [Configuring ingress using an Istio gateway](#configuring-ingress-using-an-istio-gateway)
 
 ## Install k3d 
 
