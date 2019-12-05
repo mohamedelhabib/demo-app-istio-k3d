@@ -29,6 +29,8 @@ spec:
   - match:
     - uri:
         prefix: /actuator
+    - uri:
+        prefix: /v1
     route:
     - destination:
         host: demo-app-service # interpreted as demo-app-service.api.svc.cluster.local

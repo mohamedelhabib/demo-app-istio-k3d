@@ -329,3 +329,59 @@ $ curl -v -s 172.24.0.2/actuator/info
 * Connection #0 to host 172.24.0.2 left intact
 {"git":{"branch":"67f84b9744d014f558b95fb521266fa4fb00501a","commit":{"id":"67f84b9","time":"2019-12-05T12:04:13Z"}}}
 ```
+
+### Api versionning
+
+#### Version 1
+
+```shell
+git checkout 1.1
+```
+
+This version contains a new Rest endpoint that generate a random name. 
+
+```shell
+# build the version 1.1 of the docker image
+$ JAVA_HOME=~/dev/tools/jdk-13.0.1-9-hotspot ./mvnw package
+
+$ $ docker image ls
+REPOSITORY               TAG                    IMAGE ID            CREATED             SIZE
+...
+com.example/demo-app     1.1                    cba87da91be8        49 years ago        385MB
+```
+
+> the deployment.yml reference now the 1.1 version of the image.
+> We need to import this new version into k3s cluster.
+> We have to update the `virtualservice` to be able to reach the new '/v1/hello' endpoint
+
+```shell
+$ k3d import-images com.example/demo-app:1.1
+
+# deploy modification
+$ kubectl apply -R -f k8s
+namespace/api unchanged
+deployment.apps/demo-app-deployment configured
+service/demo-app-service unchanged
+gateway.networking.istio.io/demo-app-gateway unchanged
+virtualservice.networking.istio.io/demo-app-route configured
+
+$ curl -v -s 172.24.0.2/v1/hello
+*   Trying 172.24.0.2:80...
+* TCP_NODELAY set
+* Connected to 172.24.0.2 (172.24.0.2) port 80 (#0)
+> GET /v1/hello HTTP/1.1
+> Host: 172.24.0.2
+> User-Agent: curl/7.65.3
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< content-type: text/plain;charset=UTF-8
+< content-length: 18
+< date: Thu, 05 Dec 2019 17:52:10 GMT
+< x-envoy-upstream-service-time: 5
+< server: istio-envoy
+< 
+* Connection #0 to host 172.24.0.2 left intact
+Hello, Mel Maggio!
+```
