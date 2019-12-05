@@ -285,3 +285,47 @@ $ git checkout 1.0-istio-gateway-as-ingress
 
 This version add a new file k8s/04_gateway.yml, that contains the definition of the `demo-app-gateway` and the `demo-app-route`. We only expose the `/actuator/*` endpoints.
 
+```shell
+# Apply changes
+$ kubectl apply -R -f k8s 
+namespace/api unchanged
+deployment.apps/demo-app-deployment unchanged
+service/demo-app-service unchanged
+gateway.networking.istio.io/demo-app-gateway created
+virtualservice.networking.istio.io/demo-app-route created
+
+# check that gateway is there
+$ kubectl get gateway -n api
+NAME               AGE
+demo-app-gateway   77s
+
+# check that virtualservice is there
+$ kubectl get virtualservices.networking.istio.io -n api
+NAME             GATEWAYS             HOSTS   AGE
+demo-app-route   [demo-app-gateway]   [*]     89s
+
+# get the external IP of the istio-ingressgateway
+$ kubectl get svc  -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+172.24.0.2
+
+# check that `demo-app` is accessible from outsie the k8s cluster
+$ curl -v -s 172.24.0.2/actuator/info
+*   Trying 172.24.0.2:80...
+* TCP_NODELAY set
+* Connected to 172.24.0.2 (172.24.0.2) port 80 (#0)
+> GET /actuator/info HTTP/1.1
+> Host: 172.24.0.2
+> User-Agent: curl/7.65.3
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< content-type: application/vnd.spring-boot.actuator.v3+json
+< date: Thu, 05 Dec 2019 16:02:39 GMT
+< x-envoy-upstream-service-time: 3
+< server: istio-envoy
+< transfer-encoding: chunked
+< 
+* Connection #0 to host 172.24.0.2 left intact
+{"git":{"branch":"67f84b9744d014f558b95fb521266fa4fb00501a","commit":{"id":"67f84b9","time":"2019-12-05T12:04:13Z"}}}
+```
