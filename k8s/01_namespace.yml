@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  # labels:
-  #   # enable istio injection into the new namespace
-  #   istio-injection: enabled
+  labels:
+    # enable istio injection into the new namespace
+    istio-injection: enabled
   name: api
