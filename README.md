@@ -1,6 +1,5 @@
 # Kubernetes into local environment
 
-- [Kubernetes into local environment](#kubernetes-into-local-environment)
   - [Install k3d](#install-k3d)
   - [Create cluster](#create-cluster)
   - [Deploy Application](#deploy-application)
