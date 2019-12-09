@@ -417,6 +417,9 @@ To do that we will have to deployment, one for each version.
 
 ```shell
 git checkout 1.2
+
+# build the version 1.1 of the docker image
+$ JAVA_HOME=~/dev/tools/jdk-13.0.1-9-hotspot ./mvnw package
 ```
 
 ```yaml
