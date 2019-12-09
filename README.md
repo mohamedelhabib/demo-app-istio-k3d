@@ -1,5 +1,6 @@
-# Kubernetes into local environment
+# Kubernetes + Istio + Into local environment
 
+- [Kubernetes + Istio + Into local environment](#kubernetes--istio--into-local-environment)
   - [Install k3d](#install-k3d)
   - [Create cluster](#create-cluster)
   - [Deploy Application](#deploy-application)
@@ -9,8 +10,12 @@
     - [Install istio-init](#install-istio-init)
     - [Install istio](#install-istio)
     - [Test with istio demo application](#test-with-istio-demo-application)
-    - [Update `demo-app`](#update-demo-app)
+    - [Enable istio-injection into demo-app](#enable-istio-injection-into-demo-app)
     - [Configuring ingress using an Istio gateway](#configuring-ingress-using-an-istio-gateway)
+    - [Api versionning](#api-versionning)
+      - [Version 1](#version-1)
+      - [Version 1 and Version 2 at the same time](#version-1-and-version-2-at-the-same-time)
+  - [References](#references)
 
 ## Install k3d 
 
@@ -161,8 +166,25 @@ pod/istio-init-crd-10-1.4.0-fvnwp   0/1     Completed   0          80s
 ```
 
 ### Install istio
+
 ```shell
-$ helm template istio install/kubernetes/helm/istio --namespace istio-system | kubectl apply -f -
+$ cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kiali
+  namespace: istio-system
+  labels:
+    app: kiali
+type: Opaque
+data:
+  username: YWRtaW4=
+  passphrase: YWRtaW4=
+EOF
+```
+
+```shell
+$ helm template istio install/kubernetes/helm/istio --namespace istio-system --set kiali.enabled=true | kubectl apply -f -
 poddisruptionbudget.policy/istio-galley created
 poddisruptionbudget.policy/istio-ingressgateway created
 poddisruptionbudget.policy/istio-telemetry created
@@ -218,7 +240,7 @@ $ kubectl get svc  -n istio-system istio-ingressgateway -o jsonpath='{.status.lo
 
 Goto this url to check istio demo working [http://{The IP Address}/productpage]()
 
-### Update `demo-app`
+### Enable `istio-injection` into `demo-app`
 
 Into this version `1.0-istio-injectio-on` we enable the `istio-injection` by added a label into namespace `api`
 ```shell
@@ -385,3 +407,123 @@ $ curl -v -s 172.24.0.2/v1/hello
 * Connection #0 to host 172.24.0.2 left intact
 Hello, Mel Maggio!
 ```
+
+#### Version 1 and Version 2 at the same time
+
+When migrating from version 1 to version 2 of an API, We need to give time to client of this API to migrate, So we need to have the two version of API running together.
+To do that we will have to deployment, one for each version.
+
+> Note the `version` label: this is very important for Istio to distinguish between the two deployments
+
+
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-deployment-v1
+spec:
+...
+  template:
+    metadata:
+      labels:
+        app: demo-app
+        version: v1.1
+    spec:
+      containers:
+      - name: demo-app
+        image: com.example/demo-app:1.1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-deployment-v2
+spec:
+...
+  template:
+    metadata:
+      labels:
+        app: demo-app
+        version: v1.2
+    spec:
+      containers:
+      - name: demo-app
+        image: com.example/demo-app:1.2
+```
+
+No big change to do into the kubernetes `service`
+> Note that the port is named (“name: http”). This is a requirement for Istio.
+
+> The selector is only using the `demo-app` label. Without Istio it will distribute traffic between the two deployments evenly.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: api
+  name: demo-app-service
+  labels:
+    app: demo-app
+spec:
+  ports:
+    - port: 80
+      name: http
+      targetPort: 8080
+  type: ClusterIP
+  selector:
+    app: demo-app
+```
+
+For `VirtualService` side, we use the subset. A subset/version of a route destination is identified with a reference to a named service subset which must be declared in a corresponding DestinationRule.
+
+```yaml
+  http:
+  - match:
+    - uri:
+        prefix: /v1
+    route:
+    - destination:
+        host: demo-app-service
+        subset: v1
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /v2
+    route:
+    - destination:
+        host: demo-app-service
+        subset: v2
+        port:
+          number: 80
+```
+
+And here the definition of DestinationRule that make the mapping between `Sebset/version` and `pods/version`
+
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: demo-app-rules
+  namespace: api
+spec:
+  host: demo-app-service
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+
+```
+
+
+
+
+## References
+
+- [Tried k8s + Istio on my laptop with k3d](https://dev.to/bufferings/tried-k8s-istio-in-my-local-machine-with-k3d-52gg)
+- [Managing Microservices Traffic with Istio](https://haralduebele.blog/2019/03/11/managing-microservices-traffic-with-istio/)
+- [Istio Docs](https://istio.io/docs/)
