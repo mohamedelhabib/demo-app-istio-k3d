@@ -28,11 +28,32 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /actuator
-    - uri:
         prefix: /v1
     route:
     - destination:
-        host: demo-app-service # interpreted as demo-app-service.api.svc.cluster.local
-        port:
-          number: 80
+        # interpreted as demo-app-service.api.svc.cluster.local
+        host: demo-app-service
+        subset: v1
+  - match:
+    - uri:
+        prefix: /v2
+    route:
+    - destination:
+        # interpreted as demo-app-service.api.svc.cluster.local
+        host: demo-app-service
+        subset: v2
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+   name: demo-app-rules
+   namespace: api
+spec:
+  host: demo-app-service
+  subsets:
+  - name: v1
+    labels:
+       version: v1
+  - name: v2
+    labels:
+      version: v2

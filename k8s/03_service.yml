@@ -6,11 +6,12 @@ metadata:
   name: demo-app-service
   labels:
     app: demo-app
+    service: demo-app-service
 spec:
   ports:
     - port: 80
       targetPort: 8080
-      protocol: TCP
+      name: http-web
   type: ClusterIP
   selector:
     app: demo-app
