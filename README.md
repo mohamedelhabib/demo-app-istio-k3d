@@ -415,6 +415,9 @@ To do that we will have to deployment, one for each version.
 
 > Note the `version` label: this is very important for Istio to distinguish between the two deployments
 
+```shell
+git checkout 1.2
+```
 
 ```yaml
 ---
