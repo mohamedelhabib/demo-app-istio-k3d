@@ -42,6 +42,12 @@ spec:
         # interpreted as demo-app-service.api.svc.cluster.local
         host: demo-app-service
         subset: v2
+      weight: 60
+    - destination:
+        # interpreted as demo-app-service.api.svc.cluster.local
+        host: demo-app-service
+        subset: v2m1
+      weight: 40
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
@@ -57,3 +63,6 @@ spec:
   - name: v2
     labels:
       version: v2
+  - name: v2m1
+    labels:
+      version: v2.1
